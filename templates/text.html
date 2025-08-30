@@ -1,0 +1,16 @@
+{% extends "_layout.html" %}
+
+{% block title %}Text Page{% endblock %}
+
+{% block content %}
+<main class="w-[800px] h-[480px] flex items-center justify-center overflow-hidden mx-auto my-0">
+  <div class="px-4 text-center">
+    <h1 class="font-extrabold leading-none tracking-tight
+               text-[clamp(4rem,18vw,12rem)]
+               break-words">
+        {{ words }}
+    </h1>
+  </div>
+</main>
+{% endblock %}
+
