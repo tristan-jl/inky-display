@@ -1,15 +1,16 @@
-pub mod page;
-pub mod render;
-
-use self::render::generate_screenshot;
 use anyhow::Result;
 use axum::extract::FromRef;
 use axum::http::Request;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::get;
+use axum::routing::post;
 use axum::{Json, Router};
 use headless_chrome::Browser;
+use inky_display::AppError;
+use inky_display::controller;
+use inky_display::page;
+use inky_display::render::generate_screenshot;
 use serde::Serialize;
 use std::borrow::Cow;
 use tower::ServiceBuilder;
@@ -34,6 +35,8 @@ async fn main() -> Result<()> {
         .route("/{id}", get(generate_screenshot))
         .with_state(state);
 
+    let pi_controller = Router::new().route("/blink", post(controller::blink));
+
     let file_router = Router::new()
         .route("/page.html", get(page::page_handler))
         .route("/text.html", get(page::text_handler));
@@ -42,6 +45,7 @@ async fn main() -> Result<()> {
         .nest_service("/static", ServeDir::new("./static"))
         .nest("/pages", file_router)
         .nest("/api/generate", generate_router)
+        .nest("/api/control", pi_controller)
         .fallback(|| async { AppError::NotFound })
         .layer(
             ServiceBuilder::new().layer(
@@ -82,56 +86,5 @@ pub struct AppState {
 impl FromRef<AppState> for Browser {
     fn from_ref(app_state: &AppState) -> Browser {
         app_state.browser.clone()
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-enum AppError {
-    #[error("Not found")]
-    NotFound,
-
-    #[error("Error in request")]
-    InvalidInput(Cow<'static, str>),
-
-    #[error("Axum http error")]
-    AxumHttp(#[from] axum::http::Error),
-
-    #[error("Error loading page")]
-    Render(#[from] askama::Error),
-
-    #[error("An internal error occured")]
-    Anyhow(#[from] anyhow::Error),
-}
-
-impl AppError {
-    fn status_code(&self) -> StatusCode {
-        match self {
-            AppError::NotFound => StatusCode::NOT_FOUND,
-            AppError::InvalidInput(_) => StatusCode::UNPROCESSABLE_ENTITY,
-            AppError::AxumHttp(_) | AppError::Render(_) | AppError::Anyhow(_) => {
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
-        }
-    }
-}
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> axum::response::Response {
-        match self {
-            AppError::InvalidInput(ref e) => {
-                #[derive(Debug, Serialize)]
-                struct ErrorDetail<'a> {
-                    detail: &'a Cow<'static, str>,
-                }
-
-                return (self.status_code(), Json(ErrorDetail { detail: e })).into_response();
-            }
-            AppError::Anyhow(ref e) => {
-                tracing::error!("Generic error: {:?}", e);
-            }
-            _ => (),
-        }
-
-        (self.status_code(), self.to_string()).into_response()
     }
 }

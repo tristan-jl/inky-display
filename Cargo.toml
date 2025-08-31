@@ -1,5 +1,5 @@
 [package]
-name = "inky-display"
+name = "inky_display"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,8 +7,12 @@ edition = "2024"
 anyhow = "1.0.99"
 askama = "0.14"
 axum = {version = "0.8.1", features = ["macros"]}
+byteorder = "1.5"
+gpio-cdev = "0.6"
 headless_chrome = "1.0"
+i2cdev = "0.5"
 serde = { version = "1.0", features = ["derive"] }
+spidev = "0.5"  
 thiserror = "2.0.16"
 tokio = { version = "1.43", features = ["macros", "rt-multi-thread", "signal"] }
 tower = "0.5.2"

@@ -74,27 +74,14 @@
           inherit src buildInputs nativeBuildInputs;
         };
 
-        tailwind = pkgs.stdenv.mkDerivation {
-          pname = "tailwind-output";
-          version = "1.0";
-          src = ./.;
-          nativeBuildInputs = [ pkgs.tailwindcss ];
-
-          buildPhase = ''
-            mkdir -p $out/static/fonts
-            cp ${pkgs.nerd-fonts.iosevka}/share/fonts/truetype/NerdFonts/Iosevka/*.ttf $out/static/fonts/
-            tailwindcss -i ./input.css -o $out/static/output.css --minify
-          '';
-        };
-
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
         bin = craneLib.buildPackage (
           commonArgs
           // {
             inherit cargoArtifacts;
             preBuild = ''
-              tailwindcss -i ./input.css -o $out/static/output.css --minify
               mkdir -p $out/static/fonts
+              tailwindcss -i ./input.css -o $out/static/output.css --minify
               cp ${pkgs.nerd-fonts.iosevka}/share/fonts/truetype/NerdFonts/Iosevka/IosevkaNerdFont-Regular.ttf $out/static/fonts/
               cp ${pkgs.nerd-fonts.iosevka}/share/fonts/truetype/NerdFonts/Iosevka/IosevkaNerdFont-Bold.ttf $out/static/fonts/
             '';

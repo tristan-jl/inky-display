@@ -1,9 +1,9 @@
 use askama::Template;
-use axum::response::{Html, IntoResponse};
+use axum::response::Html;
 
 use crate::AppError;
 
-pub async fn page_handler() -> Result<impl IntoResponse, AppError> {
+pub async fn page_handler() -> Result<Html<String>, AppError> {
     #[derive(Debug, Template)]
     #[template(path = "page.html")]
     struct Tmpl {
@@ -16,7 +16,7 @@ pub async fn page_handler() -> Result<impl IntoResponse, AppError> {
     Ok(Html(template.render()?))
 }
 
-pub async fn text_handler() -> Result<impl IntoResponse, AppError> {
+pub async fn text_handler() -> Result<Html<String>, AppError> {
     #[derive(Debug, Template)]
     #[template(path = "text.html")]
     struct Tmpl {
