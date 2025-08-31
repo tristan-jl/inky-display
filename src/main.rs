@@ -1,18 +1,20 @@
+use std::sync::Arc;
+use std::sync::Mutex;
+
 use anyhow::Result;
+use axum::Router;
 use axum::extract::FromRef;
 use axum::http::Request;
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::routing::post;
-use axum::{Json, Router};
 use headless_chrome::Browser;
 use inky_display::AppError;
+use inky_display::AppState;
 use inky_display::controller;
+use inky_display::controller::Inky;
 use inky_display::page;
 use inky_display::render::generate_screenshot;
-use serde::Serialize;
-use std::borrow::Cow;
+use inky_display::wrap;
 use tower::ServiceBuilder;
 use tower_http::LatencyUnit;
 use tower_http::services::ServeDir;
@@ -20,22 +22,35 @@ use tower_http::trace::DefaultOnRequest;
 use tower_http::trace::DefaultOnResponse;
 use tower_http::trace::TraceLayer;
 use tracing::Level;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_max_level(Level::DEBUG)
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                format!(
+                    "{}=debug,tower_http=debug,axum::rejection=trace",
+                    env!("CARGO_CRATE_NAME")
+                )
+                .into()
+            }),
+        )
+        .with(tracing_subscriber::fmt::layer())
         .init();
 
     let state = AppState {
         browser: Browser::default()?,
+        inky: Arc::new(Mutex::new(Inky::new()?)),
     };
 
     let generate_router = Router::new()
         .route("/{id}", get(generate_screenshot))
-        .with_state(state);
+        .with_state(state.clone());
 
-    let pi_controller = Router::new().route("/blink", post(controller::blink));
+    let pi_controller = Router::new()
+        .route("/blink", post(wrap::blink))
+        .with_state(state);
 
     let file_router = Router::new()
         .route("/page.html", get(page::page_handler))
@@ -76,15 +91,4 @@ async fn main() -> Result<()> {
         .await?;
 
     Ok(())
-}
-
-#[derive(Clone)]
-pub struct AppState {
-    pub browser: Browser,
-}
-
-impl FromRef<AppState> for Browser {
-    fn from_ref(app_state: &AppState) -> Browser {
-        app_state.browser.clone()
-    }
 }

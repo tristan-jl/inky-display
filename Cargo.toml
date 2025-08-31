@@ -11,6 +11,7 @@ byteorder = "1.5"
 gpio-cdev = "0.6"
 headless_chrome = "1.0"
 i2cdev = "0.5"
+image = { version = "0.25", default-features = false, features = ["png"] }
 serde = { version = "1.0", features = ["derive"] }
 spidev = "0.5"  
 thiserror = "2.0.16"

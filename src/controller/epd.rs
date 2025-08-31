@@ -50,7 +50,7 @@ impl EPDType {
         }
 
         let mut eeprom_write_time = PascalString::with_len(rdr.read_u8()?);
-        rdr.read(&mut eeprom_write_time.chars)?;
+        let _ = rdr.read(&mut eeprom_write_time.chars)?;
 
         Ok(Self {
             width,
