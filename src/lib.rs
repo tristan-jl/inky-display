@@ -1,3 +1,6 @@
+#![allow(clippy::diverging_sub_expression)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::missing_errors_doc)]
 pub mod controller;
 pub mod error;
 pub mod page;

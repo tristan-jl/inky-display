@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::time::Duration;
 
 use anyhow::Result;
 use axum::Router;
@@ -8,6 +9,8 @@ use axum::http::Request;
 use axum::routing::get;
 use axum::routing::post;
 use headless_chrome::Browser;
+use headless_chrome::LaunchOptions;
+use headless_chrome::browser::default_executable;
 use inky_display::AppError;
 use inky_display::AppState;
 use inky_display::controller;
@@ -39,8 +42,13 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let launch_options = LaunchOptions::default_builder()
+        .idle_browser_timeout(Duration::MAX)
+        .path(Some(default_executable().map_err(|e| anyhow::anyhow!(e))?))
+        .build()?;
+
     let state = AppState {
-        browser: Browser::default()?,
+        browser: Browser::new(launch_options)?,
         inky: Arc::new(Mutex::new(Inky::new()?)),
     };
 
@@ -50,6 +58,7 @@ async fn main() -> Result<()> {
 
     let pi_controller = Router::new()
         .route("/blink", post(wrap::blink))
+        .route("/page/{page_path}", post(wrap::set_to_page))
         .with_state(state);
 
     let file_router = Router::new()
