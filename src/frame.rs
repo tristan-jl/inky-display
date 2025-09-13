@@ -1,4 +1,4 @@
-use crate::controller::LedState;
+use crate::controller::{Inky, LedState};
 use crate::{AppError, FrameAppState};
 use axum::body::Bytes;
 use axum::debug_handler;
@@ -31,7 +31,6 @@ pub async fn blink(State(app_state): State<FrameAppState>) -> Result<StatusCode,
 #[debug_handler]
 pub async fn set_to_page(
     State(app_state): State<FrameAppState>,
-    // mut multipart: Multipart,
     body: Bytes,
 ) -> Result<StatusCode, AppError> {
     let mut image = load_from_memory_with_format(&body, image::ImageFormat::Png)
@@ -39,7 +38,7 @@ pub async fn set_to_page(
         .to_rgb8();
 
     let dims = image.dimensions();
-    if dims != (800, 480) {
+    if dims != (Inky::WIDTH as u32, Inky::HEIGHT as u32) {
         return Err(AppError::InvalidInput(
             format!("Image was the incorrect dimensions: '{dims:?}'").into(),
         ));

@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.99"
 askama = "0.14"
-axum = {version = "0.8.1", features = ["macros", "multipart"]}
+axum = {version = "0.8.1", features = ["macros"]}
 byteorder = "1.5"
 gpio-cdev = "0.6"
 headless_chrome = "1.0"

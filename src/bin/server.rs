@@ -7,10 +7,12 @@ use headless_chrome::Browser;
 use headless_chrome::LaunchOptions;
 use headless_chrome::browser::default_executable;
 use inky_display::AppError;
+use inky_display::SERVER_CONFIG;
 use inky_display::ServerAppState;
 use inky_display::comm;
 use inky_display::page;
 use reqwest::Client;
+use std::env;
 use std::time::Duration;
 use tower::ServiceBuilder;
 use tower_http::LatencyUnit;
@@ -44,7 +46,6 @@ async fn main() -> Result<()> {
     let state = ServerAppState {
         browser: Browser::new(launch_options)?,
         client: Client::new(),
-        frame_url: "http://192.168.2.17:8080".to_string(),
     };
 
     let page_router = Router::new().route("/large_text.html", get(page::large_text_handler));
@@ -57,7 +58,7 @@ async fn main() -> Result<()> {
         .with_state(state.clone());
 
     let app = Router::new()
-        .nest_service("/static", ServeDir::new("./static"))
+        .nest_service("/static", ServeDir::new(&SERVER_CONFIG.static_root))
         .nest_service("/image", ServeDir::new("./images"))
         .nest("/pages", page_router)
         .nest("/api/control", controller_router)
@@ -81,7 +82,8 @@ async fn main() -> Result<()> {
             ),
         );
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
+    let listener =
+        tokio::net::TcpListener::bind(format!("0.0.0.0:{}", &SERVER_CONFIG.port)).await?;
     tracing::info!("listening on {}", listener.local_addr()?);
     axum::serve(listener, app)
         .with_graceful_shutdown(async {

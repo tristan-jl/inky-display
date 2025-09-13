@@ -1,4 +1,5 @@
-use crate::{AppError, ServerAppState, pad_and_convert};
+use crate::controller::Inky;
+use crate::{AppError, SERVER_CONFIG, ServerAppState, pad_and_convert};
 use anyhow::{Context, Result};
 use axum::debug_handler;
 use axum::extract::{Path, State};
@@ -6,12 +7,12 @@ use axum::http::StatusCode;
 use headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption;
 use headless_chrome::protocol::cdp::Target::CreateTarget;
 use image::{ImageReader, load_from_memory_with_format};
+use reqwest::Client;
 
 #[debug_handler]
-pub async fn health_check(State(state): State<ServerAppState>) -> Result<StatusCode, AppError> {
-    let res = state
-        .client
-        .get(format!("{}/api/control/check", state.frame_url))
+pub async fn health_check(State(client): State<Client>) -> Result<StatusCode, AppError> {
+    let res = client
+        .get(format!("{}/api/control/check", &SERVER_CONFIG.frame_url))
         .send()
         .await?;
 
@@ -20,7 +21,7 @@ pub async fn health_check(State(state): State<ServerAppState>) -> Result<StatusC
 
 #[debug_handler]
 pub async fn set_to_image(
-    State(state): State<ServerAppState>,
+    State(client): State<Client>,
     Path(image_path): Path<String>,
 ) -> Result<StatusCode, AppError> {
     let image_path = format!("./images/{image_path}");
@@ -31,13 +32,16 @@ pub async fn set_to_image(
         })?
         .decode()
         .context("Couldn't decode image")?
-        .resize(800, 480, image::imageops::FilterType::Lanczos3)
+        .resize(
+            Inky::WIDTH as u32,
+            Inky::HEIGHT as u32,
+            image::imageops::FilterType::Lanczos3,
+        )
         .to_rgb8();
-    let b = pad_and_convert(&image)?;
 
-    let res = state
-        .client
-        .post(format!("{}/api/control/set", state.frame_url))
+    let b = pad_and_convert(&image)?;
+    let res = client
+        .post(format!("{}/api/control/set", &SERVER_CONFIG.frame_url))
         .body(b)
         .send()
         .await?;
@@ -53,8 +57,8 @@ pub async fn set_to_page(
     let image = {
         let tab = state.browser.new_tab_with_options(CreateTarget {
             url: "about:blank".to_string(),
-            width: Some(800),
-            height: Some(480),
+            width: Some(Inky::WIDTH as u32),
+            height: Some(Inky::HEIGHT as u32),
             browser_context_id: None,
             enable_begin_frame_control: None,
             new_window: Some(true),
@@ -62,7 +66,10 @@ pub async fn set_to_page(
             for_tab: None,
         })?;
 
-        tab.navigate_to(&format!("http://localhost:8080/pages/{page_path}"))?;
+        tab.navigate_to(&format!(
+            "http://localhost:{}/pages/{page_path}",
+            &SERVER_CONFIG.port
+        ))?;
         tab.wait_until_navigated()?;
         tab.wait_for_element("body")?;
 
@@ -84,7 +91,7 @@ pub async fn set_to_page(
 
     let res = state
         .client
-        .post(format!("{}/api/control/set", state.frame_url))
+        .post(format!("{}/api/control/set", &SERVER_CONFIG.frame_url))
         .body(b)
         .send()
         .await?;
@@ -96,7 +103,7 @@ pub async fn set_to_page(
 pub async fn set_to_stripes(State(state): State<ServerAppState>) -> Result<StatusCode, AppError> {
     let res = state
         .client
-        .get(format!("{}/api/control/stripe", state.frame_url))
+        .get(format!("{}/api/control/stripe", &SERVER_CONFIG.frame_url))
         .send()
         .await?;
 
