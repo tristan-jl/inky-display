@@ -1,5 +1,5 @@
 use image::imageops::FilterType;
-use inky_display::comm::{Inky, LedState};
+use inky_display::controller::{Inky, LedState};
 use std::time::Duration;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 

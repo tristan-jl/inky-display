@@ -1,19 +1,14 @@
 use anyhow::Result;
 use axum::Router;
-use axum::extract::FromRef;
 use axum::http::Request;
 use axum::routing::get;
 use axum::routing::post;
-use headless_chrome::LaunchOptions;
-use headless_chrome::browser::default_executable;
 use inky_display::AppError;
 use inky_display::FrameAppState;
-use inky_display::comm;
-use inky_display::comm::Inky;
+use inky_display::controller::Inky;
 use inky_display::frame;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::time::Duration;
 use tower::ServiceBuilder;
 use tower_http::LatencyUnit;
 use tower_http::trace::DefaultOnRequest;
@@ -28,7 +23,7 @@ async fn main() -> Result<()> {
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 format!(
-                    "{}=debug,tower_http=debug,axum::rejection=trace",
+                    "{}=debug,inky_display=debug,tower_http=debug,axum::rejection=trace",
                     env!("CARGO_CRATE_NAME")
                 )
                 .into()

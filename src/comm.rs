@@ -11,5 +11,7 @@ pub async fn health_check(State(client): State<Client>) -> Result<StatusCode, Ap
         .send()
         .await?;
 
+    tracing::info!("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
     Ok(res.error_for_status()?.status())
 }

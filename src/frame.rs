@@ -35,7 +35,7 @@ pub async fn set_to_page(
     mut multipart: Multipart,
 ) -> Result<StatusCode, AppError> {
     let form_field = {
-        let mut field = multipart
+        let field = multipart
             .next_field()
             .await
             .map_err(|e| {
@@ -57,7 +57,7 @@ pub async fn set_to_page(
     let dims = image.dimensions();
     if dims != (800, 480) {
         return Err(AppError::InvalidInput(
-            format!("Image was the incorrect dimensions: '{:?}'", dims).into(),
+            format!("Image was the incorrect dimensions: '{dims:?}'").into(),
         ));
     }
 
