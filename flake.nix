@@ -49,6 +49,10 @@
               lib.any file.hasExt [
                 "css"
                 "html"
+                "ico"
+                "png"
+                "svg"
+                "webmanifest"
               ]
             ) unfilteredRoot)
           ];

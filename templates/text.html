@@ -1,16 +1,14 @@
-{% extends "_layout.html" %}
-
-{% block title %}Text Page{% endblock %}
-
-{% block content %}
-<main class="w-[800px] h-[480px] flex items-center justify-center overflow-hidden mx-auto my-0">
-  <div class="px-4 text-center">
-    <h1 class="font-extrabold leading-none tracking-tight
-               text-[clamp(4rem,18vw,12rem)]
-               break-words">
-        {{ words }}
+{% extends "_layout.html" %} {% block title %}Text Page{% endblock %} {% block
+content %}
+<main
+  class="w-[800px] h-[480px] flex items-center justify-center overflow-hidden mx-auto my-0"
+>
+  <div class="px-4 text-center w-full h-full flex items-center justify-center">
+    <h1
+      class="font-extrabold leading-none tracking-tight break-words text-[clamp(1rem,8vw,12rem)] max-w-full max-h-full"
+    >
+      {{ words }}
     </h1>
   </div>
 </main>
 {% endblock %}
-

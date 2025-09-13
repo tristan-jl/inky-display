@@ -1,3 +1,4 @@
-/target
-/static
 /result
+/target
+static/fonts
+static/output.css

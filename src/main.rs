@@ -16,7 +16,8 @@ use inky_display::AppState;
 use inky_display::controller;
 use inky_display::controller::Inky;
 use inky_display::page;
-use inky_display::render::generate_screenshot;
+use inky_display::render::process_image;
+use inky_display::render::process_page;
 use inky_display::wrap;
 use tower::ServiceBuilder;
 use tower_http::LatencyUnit;
@@ -49,27 +50,30 @@ async fn main() -> Result<()> {
 
     let state = AppState {
         browser: Browser::new(launch_options)?,
-        inky: Arc::new(Mutex::new(Inky::new()?)),
+        // inky: Arc::new(Mutex::new(Inky::new()?)),
     };
 
     let generate_router = Router::new()
-        .route("/{id}", get(generate_screenshot))
+        .route("/page/{id}", get(process_page))
+        .route("/image/{id}", get(process_image))
         .with_state(state.clone());
 
-    let pi_controller = Router::new()
-        .route("/blink", post(wrap::blink))
-        .route("/page/{page_path}", post(wrap::set_to_page))
-        .with_state(state);
+    // let pi_controller = Router::new()
+    //     .route("/blink", post(wrap::blink))
+    //     .route("/page/{page_path}", post(wrap::set_to_page))
+    //     .with_state(state);
 
-    let file_router = Router::new()
+    let page_router = Router::new()
         .route("/page.html", get(page::page_handler))
+        .route("/large_text.html", get(page::large_text_handler))
         .route("/text.html", get(page::text_handler));
 
     let app = Router::new()
         .nest_service("/static", ServeDir::new("./static"))
-        .nest("/pages", file_router)
+        .nest_service("/image", ServeDir::new("./images"))
+        .nest("/pages", page_router)
         .nest("/api/generate", generate_router)
-        .nest("/api/control", pi_controller)
+        // .nest("/api/control", pi_controller)
         .fallback(|| async { AppError::NotFound })
         .layer(
             ServiceBuilder::new().layer(

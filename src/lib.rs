@@ -16,7 +16,7 @@ use headless_chrome::Browser;
 #[derive(Clone)]
 pub struct AppState {
     pub browser: Browser,
-    pub inky: Arc<Mutex<controller::Inky>>,
+    // pub inky: Arc<Mutex<controller::Inky>>,
 }
 
 impl FromRef<AppState> for Browser {
@@ -25,8 +25,8 @@ impl FromRef<AppState> for Browser {
     }
 }
 
-impl FromRef<AppState> for Arc<Mutex<controller::Inky>> {
-    fn from_ref(app_state: &AppState) -> Arc<Mutex<controller::Inky>> {
-        app_state.inky.clone()
-    }
-}
+// impl FromRef<AppState> for Arc<Mutex<controller::Inky>> {
+//     fn from_ref(app_state: &AppState) -> Arc<Mutex<controller::Inky>> {
+//         app_state.inky.clone()
+//     }
+// }

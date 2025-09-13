@@ -3,8 +3,6 @@ mod inky;
 mod palette;
 mod space;
 
-use crate::AppError;
-use axum::http::StatusCode;
 use image::Rgb;
 use image::RgbImage;
 
