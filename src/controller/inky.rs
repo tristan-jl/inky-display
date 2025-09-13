@@ -51,43 +51,15 @@ impl GpioLines {
     }
 }
 
-// #[derive(Debug, Clone, Copy)]
-// #[repr(u8)]
-// pub enum InkyColour {
-//     Black = 0,
-//     White = 1,
-//     Yellow = 2,
-//     Red = 3,
-//     // Note: 4 is missing
-//     Blue = 5,
-//     Green = 6,
-// }
-
-// impl From<u8> for InkyColour {
-//     fn from(value: u8) -> Self {
-//         match value {
-//             0 => InkyColour::Black,
-//             // 1 => InkyColour::White,
-//             2 => InkyColour::Yellow,
-//             3 => InkyColour::Red,
-//             // No colour 4
-//             5 => InkyColour::Blue,
-//             6 => InkyColour::Green,
-//             // Default to white, note: 1 is also white
-//             _ => InkyColour::White,
-//         }
-//     }
-// }
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq, std::hash::Hash)]
 #[repr(u8)]
 pub enum InkyColour {
     Black = 0,
-    Blue = 1,
+    White = 1,
     Yellow = 2,
     Red = 3,
     Green = 4,
-    White = 5,
+    Blue = 5,
 }
 
 impl From<u8> for InkyColour {
