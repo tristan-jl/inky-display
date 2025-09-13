@@ -24,6 +24,9 @@ pub enum AppError {
     #[error("GPIO error: {0}")]
     Gpio(#[from] gpio_cdev::errors::Error),
 
+    #[error("Request to frame failed")]
+    RequestError(#[from] reqwest::Error),
+
     #[error("An internal error occured")]
     Anyhow(#[from] anyhow::Error),
 }
@@ -37,6 +40,7 @@ impl AppError {
             | AppError::Render(_)
             | AppError::Io(_)
             | AppError::Gpio(_)
+            | AppError::RequestError(_)
             | AppError::Anyhow(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -52,6 +56,9 @@ impl IntoResponse for AppError {
                 }
 
                 return (self.status_code(), Json(ErrorDetail { detail: e })).into_response();
+            }
+            AppError::RequestError(ref e) => {
+                tracing::error!("Request error: {:?}", e);
             }
             AppError::Anyhow(ref e) => {
                 tracing::error!("Generic error: {:?}", e);

@@ -61,8 +61,10 @@
         nativeBuildInputs = with pkgs; [
           cargo
           chromedriver
-          ungoogled-chromium
+          openssl
+          pkg-config
           rustc
+          ungoogled-chromium
         ];
         buildInputs = with pkgs; [
           nerd-fonts.iosevka
@@ -79,10 +81,13 @@
         };
 
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-        bin = craneLib.buildPackage (
+        server = craneLib.buildPackage (
           commonArgs
           // {
             inherit cargoArtifacts;
+            pname = "server";
+            cargoExtraArgs = "--bin server";
+
             preBuild = ''
               mkdir -p $out/static/fonts
               tailwindcss -i ./input.css -o $out/static/output.css --minify
@@ -93,21 +98,25 @@
         );
 
         cross-crate = crossPkgs.callPackage craneLibCross.buildPackage {
+          nativeBuildInputs = with pkgs; [
+            openssl
+            pkg-config
+          ];
           inherit src;
           strictDeps = true;
+          pname = "frame";
+          cargoExtraArgs = "--bin frame";
         };
       in
-      with pkgs;
       {
         packages = {
-          inherit bin;
-          default = bin;
+          inherit server;
+          default = server;
           cross = cross-crate;
         };
 
-        devShells.default = mkShell {
-          inherit buildInputs nativeBuildInputs;
-
+        devShells.default = craneLib.devShell {
+          inputsFrom = [ server ];
           shellHook = ''
             exec fish
           '';
