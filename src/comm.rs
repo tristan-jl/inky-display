@@ -102,21 +102,3 @@ pub async fn set_to_stripes(State(state): State<ServerAppState>) -> Result<Statu
 
     Ok(res.error_for_status()?.status())
 }
-
-// #[debug_handler]
-// pub async fn debug(body: Bytes) -> Result<StatusCode, AppError> {
-//     tracing::info!("Got body");
-//     let image = load_from_memory_with_format(&body, image::ImageFormat::Png)
-//         .expect("screenshot wasnt a png")
-//         .to_rgb8();
-
-//     let dims = image.dimensions();
-//     tracing::info!("dims: {dims:?}");
-//     if dims != (800, 480) {
-//         return Err(AppError::InvalidInput(
-//             format!("Image was the incorrect dimensions: '{dims:?}'").into(),
-//         ));
-//     }
-
-//     Ok(StatusCode::OK)
-// }

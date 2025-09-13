@@ -47,10 +47,8 @@ async fn main() -> Result<()> {
         frame_url: "http://192.168.2.17:8080".to_string(),
     };
 
-    let page_router = Router::new()
-        .route("/page.html", get(page::page_handler))
-        .route("/large_text.html", get(page::large_text_handler))
-        .route("/text.html", get(page::text_handler));
+    let page_router = Router::new().route("/large_text.html", get(page::large_text_handler));
+
     let controller_router = Router::new()
         .route("/check", get(comm::health_check))
         .route("/set/image/{image_path}", post(comm::set_to_image))

@@ -1,9 +1,8 @@
 use crate::controller::LedState;
 use crate::{AppError, FrameAppState};
-use anyhow::Context;
 use axum::body::Bytes;
 use axum::debug_handler;
-use axum::extract::{Multipart, State};
+use axum::extract::State;
 use axum::http::StatusCode;
 use image::load_from_memory_with_format;
 use std::time::Duration;

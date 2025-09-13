@@ -115,6 +115,11 @@
           cross = cross-crate;
         };
 
+        apps.default = {
+          type = "app";
+          program = "${self.packages.${system}.default}/bin/server";
+        };
+
         devShells.default = craneLib.devShell {
           inputsFrom = [ server ];
           shellHook = ''
