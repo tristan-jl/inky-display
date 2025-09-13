@@ -51,29 +51,58 @@ impl GpioLines {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+// #[derive(Debug, Clone, Copy)]
+// #[repr(u8)]
+// pub enum InkyColour {
+//     Black = 0,
+//     White = 1,
+//     Yellow = 2,
+//     Red = 3,
+//     // Note: 4 is missing
+//     Blue = 5,
+//     Green = 6,
+// }
+
+// impl From<u8> for InkyColour {
+//     fn from(value: u8) -> Self {
+//         match value {
+//             0 => InkyColour::Black,
+//             // 1 => InkyColour::White,
+//             2 => InkyColour::Yellow,
+//             3 => InkyColour::Red,
+//             // No colour 4
+//             5 => InkyColour::Blue,
+//             6 => InkyColour::Green,
+//             // Default to white, note: 1 is also white
+//             _ => InkyColour::White,
+//         }
+//     }
+// }
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, std::hash::Hash)]
 #[repr(u8)]
 pub enum InkyColour {
     Black = 0,
-    White = 1,
+    Blue = 1,
     Yellow = 2,
     Red = 3,
-    // Note: 4 is missing
-    Blue = 5,
-    Green = 6,
+    Green = 4,
+    White = 5,
 }
 
 impl From<u8> for InkyColour {
     fn from(value: u8) -> Self {
         match value {
             0 => InkyColour::Black,
+            1 => InkyColour::Blue,
             2 => InkyColour::Yellow,
             3 => InkyColour::Red,
-            // No colour 4
-            5 => InkyColour::Blue,
-            6 => InkyColour::Green,
-            // Default to white, note: 1 is also white
-            _ => InkyColour::White,
+            4 => InkyColour::Green,
+            5 => InkyColour::White,
+            _ => {
+                tracing::warn!("Got inky colour out of range: '{value}'");
+                InkyColour::White
+            }
         }
     }
 }
@@ -134,23 +163,25 @@ impl Inky {
     const SPI_MAX_SPEED_HZ: u32 = 1_000_000;
     const SPI_CHUNK_SIZE: usize = 4096;
 
-    const DESATURATED_PALETTE_COLOURS: [[u8; 3]; 5] = [
+    const DESATURATED_PALETTE_COLOURS: [[u8; 3]; 6] = [
         [0, 0, 0],
         [255, 255, 255],
         [255, 255, 0],
         [255, 0, 0],
         [0, 255, 0],
+        [255, 255, 255],
     ];
 
-    const SATURATED_PALETTE_COLOURS: [[u8; 3]; 5] = [
+    const SATURATED_PALETTE_COLOURS: [[u8; 3]; 6] = [
         [0, 0, 0],
         [161, 164, 165],
         [208, 190, 71],
         [156, 72, 75],
         [58, 91, 70],
+        [255, 255, 255],
     ];
 
-    fn from_eeprom(eeprom: EPDType) -> Result<Self, AppError> {
+    fn from_eeprom(eeprom: EPDType, saturation: f32) -> Result<Self, AppError> {
         let mut spi = Spidev::open(format!("{}{}.{}", Self::SPI_DEVICE, 0, 0))?;
         let options = SpidevOptions::new()
             .bits_per_word(8)
@@ -180,16 +211,16 @@ impl Inky {
             palette: Palette::from_blend(
                 &Self::DESATURATED_PALETTE_COLOURS,
                 &Self::SATURATED_PALETTE_COLOURS,
-                0.5,
+                saturation,
             )?,
             colour_space: ColourSpace::CIELAB,
         })
     }
 
-    pub fn new() -> Result<Self, AppError> {
+    pub fn new(saturation: f32) -> Result<Self, AppError> {
         let epd = EPDType::from_eeprom_block()?;
         tracing::info!("Creating new Inky");
-        Inky::from_eeprom(epd)
+        Inky::from_eeprom(epd, saturation)
     }
 
     pub fn set_led(&mut self, led_state: LedState) -> Result<(), AppError> {
@@ -323,10 +354,26 @@ impl Inky {
         tracing::info!("Done");
 
         tracing::info!("Setting buffer...");
+        let mut map = std::collections::HashMap::new();
         for (i, pixel) in image.pixels().enumerate() {
-            self.buf[i] = InkyColour::from(self.palette.to_idx(&pixel.0));
+            let mfdsafds = InkyColour::from(self.palette.to_idx(&pixel.0));
+            map.insert(mfdsafds, pixel.0);
+            self.buf[i] = mfdsafds;
         }
         tracing::info!("Done");
+        tracing::info!("hashmap: {map:?}");
+
+        Ok(())
+    }
+
+    pub fn set_stripes(&mut self) -> Result<(), AppError> {
+        tracing::info!("Setting buffer...");
+        let total = Self::HEIGHT * Self::WIDTH;
+        for i in 0..total {
+            self.buf[i] = InkyColour::from(((i * Self::WIDTH / 6) % 6) as u8);
+        }
+        tracing::info!("Done");
+        self.update_display()?;
 
         Ok(())
     }

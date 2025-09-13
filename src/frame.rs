@@ -1,6 +1,7 @@
 use crate::controller::LedState;
 use crate::{AppError, FrameAppState};
 use anyhow::Context;
+use axum::body::Bytes;
 use axum::debug_handler;
 use axum::extract::{Multipart, State};
 use axum::http::StatusCode;
@@ -28,29 +29,13 @@ pub async fn blink(State(app_state): State<FrameAppState>) -> Result<StatusCode,
     Ok(StatusCode::OK)
 }
 
-#[allow(clippy::unused_async)]
 #[debug_handler]
 pub async fn set_to_page(
     State(app_state): State<FrameAppState>,
-    mut multipart: Multipart,
+    // mut multipart: Multipart,
+    body: Bytes,
 ) -> Result<StatusCode, AppError> {
-    let form_field = {
-        let field = multipart
-            .next_field()
-            .await
-            .map_err(|e| {
-                tracing::warn!("Got multipart error during set to page: '{e}'");
-                AppError::InvalidInput("Multipart form error".into())
-            })?
-            .context("No field provided")?;
-        let name = field.name().unwrap_or("<NO FIELD NAME>").to_string();
-        let data = field.bytes().await.unwrap();
-
-        tracing::info!("Length of `{}` is {} bytes", name, data.len());
-        data
-    };
-
-    let mut image = load_from_memory_with_format(&form_field, image::ImageFormat::Png)
+    let mut image = load_from_memory_with_format(&body, image::ImageFormat::Png)
         .expect("screenshot wasnt a png")
         .to_rgb8();
 
@@ -62,6 +47,14 @@ pub async fn set_to_page(
     }
 
     let mut inky = app_state.inky.lock().expect("mutex poisoned");
-    inky.set_display(&mut image, false)?;
+    inky.set_display(&mut image, true)?;
+    Ok(StatusCode::OK)
+}
+
+#[allow(clippy::unused_async)]
+#[debug_handler]
+pub async fn stripe(State(app_state): State<FrameAppState>) -> Result<StatusCode, AppError> {
+    let mut inky = app_state.inky.lock().expect("mutex poisoned");
+    inky.set_stripes()?;
     Ok(StatusCode::OK)
 }

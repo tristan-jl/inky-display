@@ -33,13 +33,14 @@ async fn main() -> Result<()> {
         .init();
 
     let state = FrameAppState {
-        inky: Arc::new(Mutex::new(Inky::new()?)),
+        inky: Arc::new(Mutex::new(Inky::new(0.7)?)),
     };
 
     let pi_controller = Router::new()
         .route("/check", get(frame::health_check))
         .route("/blink", post(frame::blink))
         .route("/set", post(frame::set_to_page))
+        .route("/stripe", post(frame::stripe))
         .with_state(state);
 
     let app = Router::new()

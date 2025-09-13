@@ -2,6 +2,7 @@ use anyhow::Result;
 use axum::Router;
 use axum::http::Request;
 use axum::routing::get;
+use axum::routing::post;
 use headless_chrome::Browser;
 use headless_chrome::LaunchOptions;
 use headless_chrome::browser::default_executable;
@@ -9,8 +10,6 @@ use inky_display::AppError;
 use inky_display::ServerAppState;
 use inky_display::comm;
 use inky_display::page;
-use inky_display::render::process_image;
-use inky_display::render::process_page;
 use reqwest::Client;
 use std::time::Duration;
 use tower::ServiceBuilder;
@@ -45,27 +44,24 @@ async fn main() -> Result<()> {
     let state = ServerAppState {
         browser: Browser::new(launch_options)?,
         client: Client::new(),
+        frame_url: "http://192.168.2.17:8080".to_string(),
     };
 
     let page_router = Router::new()
         .route("/page.html", get(page::page_handler))
         .route("/large_text.html", get(page::large_text_handler))
         .route("/text.html", get(page::text_handler));
-
-    let generate_router = Router::new()
-        .route("/page/{id}", get(process_page))
-        .route("/image/{id}", get(process_image))
-        .with_state(state.clone());
-
     let controller_router = Router::new()
         .route("/check", get(comm::health_check))
+        .route("/set/image/{image_path}", post(comm::set_to_image))
+        .route("/set/page/{image_path}", post(comm::set_to_page))
+        .route("/stripe", post(comm::set_to_stripes))
         .with_state(state.clone());
 
     let app = Router::new()
         .nest_service("/static", ServeDir::new("./static"))
         .nest_service("/image", ServeDir::new("./images"))
         .nest("/pages", page_router)
-        .nest("/api/generate", generate_router)
         .nest("/api/control", controller_router)
         .fallback(|| async { AppError::NotFound })
         .layer(
