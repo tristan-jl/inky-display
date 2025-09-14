@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
         .init();
 
     let state = FrameAppState {
-        inky: Arc::new(Mutex::new(Inky::new(0.7)?)),
+        inky: Arc::new(Mutex::new(Inky::new(0.5)?)),
     };
 
     let pi_controller = Router::new()

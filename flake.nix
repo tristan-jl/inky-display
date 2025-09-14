@@ -28,7 +28,7 @@
           ...
         }:
         {
-          options.services.inky_display_server = {
+          options.services.inky-display = {
             enable = lib.mkEnableOption "Enable Inky Display Server";
 
             port = lib.mkOption {
@@ -42,8 +42,8 @@
             };
           };
 
-          config = lib.mkIf config.services.inky_display_server.enable {
-            systemd.services.inky_display_server = {
+          config = lib.mkIf config.services.inky-display.enable {
+            systemd.services.inky-display = {
               description = "Inky Display Server";
               wantedBy = [ "multi-user.target" ];
               after = [ "network.target" ];
@@ -57,8 +57,8 @@
                 Restart = "on-failure";
               };
               environment = {
-                PORT = toString config.services.inky_display_server.port;
-                FRAME_URL = toString config.services.inky_display_server.frame_url;
+                PORT = toString config.services.inky-display.port;
+                FRAME_URL = toString config.services.inky-display.frame_url;
               };
             };
           };
