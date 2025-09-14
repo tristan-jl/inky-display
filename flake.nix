@@ -51,7 +51,7 @@
                 Type = "simple";
                 DynamicUser = true;
                 Environment = [
-                  "PATH=${pkgs.google-chrome}/bin:$PATH"
+                  "PATH=${pkgs.ungoogled-chromium}/bin:${pkgs.chromedriver}/bin:$PATH"
                 ];
                 ExecStart = "${self.packages.${pkgs.system}.server}/bin/server";
                 Restart = "on-failure";
