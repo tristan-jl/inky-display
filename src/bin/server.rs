@@ -48,12 +48,15 @@ async fn main() -> Result<()> {
         client: Client::new(),
     };
 
-    let page_router = Router::new().route("/large_text.html", get(page::large_text_handler));
+    let page_router = Router::new()
+        .route("/large_text", get(page::large_text_handler))
+        .route("/dashboard", get(page::dashboard_handler))
+        .with_state(state.clone());
 
     let controller_router = Router::new()
         .route("/check", get(comm::health_check))
-        .route("/set/image/{image_path}", post(comm::set_to_image))
-        .route("/set/page/{image_path}", post(comm::set_to_page))
+        .route("/image/{image_path}", post(comm::set_to_image))
+        .route("/page/{image_path}", post(comm::set_to_page))
         .route("/stripe", post(comm::set_to_stripes))
         .with_state(state.clone());
 
@@ -85,6 +88,7 @@ async fn main() -> Result<()> {
     let listener =
         tokio::net::TcpListener::bind(format!("0.0.0.0:{}", &SERVER_CONFIG.port)).await?;
     tracing::info!("listening on {}", listener.local_addr()?);
+
     axum::serve(listener, app)
         .with_graceful_shutdown(async {
             _ = tokio::signal::ctrl_c().await;

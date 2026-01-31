@@ -1,0 +1,83 @@
+{% extends "_layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<main class="w-[800px] h-[480px] flex flex-col bg-white text-black overflow-hidden mx-auto my-0 font-sans">
+  <div class="flex flex-1 min-h-0">
+    
+    <div class="w-[55%] p-4 border-r-2 border-black overflow-hidden">
+      <h2 class="text-xl font-black uppercase tracking-tight mb-3 border-b-2 border-black pb-1">Tube Status</h2>
+      {% if !has_disruptions %}
+      <div class="flex flex-col items-center justify-center h-[calc(100%-4rem)] opacity-90">
+        <div class="text-4xl mb-2">●</div>
+        <p class="text-2xl font-bold text-center italic">All Lines Good Service</p>
+      </div>
+      {% else %}
+      <div class="space-y-2 text-sm">
+        {% for line in tube_lines %}
+        <div class="flex justify-between items-center py-1 border-b border-gray-200 last:border-b-0">
+          <span class="font-bold text-base w-32 shrink-0">{{ line.name }}</span>
+          <span class="text-right flex-1 font-medium leading-tight">{{ line.status }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="w-[45%] p-4 flex flex-col bg-gray-50/50">
+      <h2 class="text-xl font-black uppercase tracking-tight mb-3 border-b-2 border-black pb-1 text-right">Weather</h2>
+
+      <div class="flex items-center justify-around mb-6 mt-2">
+        <img src="/static/icons/{{ weather.icon }}" class="w-24 h-24" alt="Weather Icon">
+        <div class="text-right">
+          <div class="text-6xl font-black leading-none">{{ weather.current_temp }}°</div>
+          <div class="text-lg font-bold uppercase tracking-wide text-gray-700">{{ weather.current_description }}</div>
+        </div>
+      </div>
+
+      <div class="mt-auto border-t border-black/10 pt-4">
+        <div class="flex justify-between items-end">
+          {% for day in weather.forecast %}
+          <div class="flex flex-col items-center w-1/5">
+            <span class="text-xs font-black uppercase">{{ day.day }}</span>
+            <img src="/static/icons/{{ day.icon }}" class="w-10 h-10 my-1" alt="{{ day.description }}">
+            <div class="flex flex-col items-center leading-none">
+              <span class="text-sm font-bold">{{ day.high }}°</span>
+              <span class="text-[10px] text-gray-500 font-semibold">{{ day.low }}°</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t-4 border-black p-3 bg-white">
+    <div class="flex items-center gap-3 mb-2">
+      <h2 class="text-lg font-black uppercase tracking-tighter bg-black text-white px-2 py-0.5">Arsenal FC</h2>
+      <div class="h-px flex-1 bg-black/20"></div>
+    </div>
+    <div class="flex flex-row justify-between text-sm overflow-hidden gap-4">
+      {% for m in matches %}
+      <div class="flex flex-col border-l border-gray-300 pl-3 first:border-l-0">
+        <span class="text-[10px] font-bold text-gray-500 uppercase">{{ m.datetime_string }}</span>
+        <div class="whitespace-nowrap">
+          {% match m.score %}
+            {% when Some with (score) %}
+              <span class="font-medium">{{ m.home_team }}</span> 
+              <span class="font-black px-1">{{ score }}</span> 
+              <span class="font-medium">{{ m.away_team }}</span>
+            {% when None %}
+              <span class="font-bold">{{ m.home_team }}</span> 
+              <span class="text-gray-400 mx-1">v</span> 
+              <span class="font-bold">{{ m.away_team }}</span>
+          {% endmatch %}
+        </div>
+        <span class="text-[9px] font-semibold text-gray-400 truncate uppercase">{{ m.competition }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}

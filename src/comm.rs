@@ -5,6 +5,7 @@ use axum::debug_handler;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use headless_chrome::protocol::cdp::Page::CaptureScreenshotFormatOption;
+use headless_chrome::protocol::cdp::Page::SetDeviceMetricsOverride;
 use headless_chrome::protocol::cdp::Target::CreateTarget;
 use image::{ImageReader, load_from_memory_with_format};
 use reqwest::Client;
@@ -72,6 +73,20 @@ pub async fn set_to_page(
         ))?;
         tab.wait_until_navigated()?;
         tab.wait_for_element("body")?;
+        tab.call_method(SetDeviceMetricsOverride {
+            width: Inky::WIDTH as u32,
+            height: Inky::HEIGHT as u32,
+            device_scale_factor: 1.0,
+            mobile: false,
+            scale: Some(1.0),
+            screen_width: Some(Inky::WIDTH as u32),
+            screen_height: Some(Inky::HEIGHT as u32),
+            position_x: Some(0),
+            position_y: Some(0),
+            dont_set_visible_size: Some(false),
+            screen_orientation: None,
+            viewport: None,
+        })?;
 
         let element = tab.find_element("body")?;
         element.scroll_into_view()?;

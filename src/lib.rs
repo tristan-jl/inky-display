@@ -4,6 +4,7 @@
 #![allow(clippy::missing_errors_doc)]
 pub mod comm;
 pub mod controller;
+pub mod data_sources;
 pub mod error;
 pub mod frame;
 pub mod page;
@@ -54,6 +55,11 @@ pub struct ServerConfig {
     pub port: u16,
     pub frame_url: String,
     pub static_root: String,
+
+    pub lat: f32,
+    pub long: f32,
+    pub football_api_key: String,
+    pub tube_api_key: String,
 }
 
 impl ServerConfig {
@@ -63,15 +69,33 @@ impl ServerConfig {
             .unwrap_or(8080);
 
         let frame_url = std::env::var("FRAME_URL").expect("FRAME_URL was not set");
-        let static_root = std::env::var("STATIC_ROOT").unwrap_or("./static".to_string());
-
         tracing::debug!("Connecting to frame at: '{frame_url}'");
+
+        let static_root = std::env::var("STATIC_ROOT").unwrap_or("./static".to_string());
         tracing::debug!("Using static folder: '{static_root}'");
+
+        let lat = std::env::var("WEATHER_LAT")
+            .expect("WEATHER_LAT was not set")
+            .parse()
+            .expect("Could not parse WEATHER_LAT as a float");
+        let long = std::env::var("WEATHER_LONG")
+            .expect("WEATHER_LONG was not set")
+            .parse()
+            .expect("Could not parse WEATHER_LONG as a float");
+        tracing::debug!("Using coordinates: {lat}, {long} for the weather");
+
+        let football_api_key =
+            std::env::var("FOOTBALL_API_KEY").expect("FOOTBALL_API_KEY was not set");
+        let tube_api_key = std::env::var("TUBE_API_KEY").expect("TUBE_API_KEY was not set");
 
         Self {
             port,
             frame_url,
             static_root,
+            lat,
+            long,
+            football_api_key,
+            tube_api_key,
         }
     }
 }
