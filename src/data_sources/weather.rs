@@ -75,7 +75,6 @@ pub async fn fetch_weather(client: &Client) -> Result<Weather, anyhow::Error> {
     );
 
     let response: OpenMeteoResponse = client.get(&url).send().await?.json().await?;
-    dbg!(&response);
     let forecast: Vec<DayForecast> = response
         .daily
         .time
